@@ -330,16 +330,44 @@
 
     const fragment = document.createDocumentFragment();
 
+    let groupIndex = 0;
     groups.forEach((groupItems, category) => {
+      const groupId = 'menu-group-' + groupIndex;
+      const expanded = groupIndex === 0;
+      groupIndex += 1;
       const section = el('section', 'group');
       const heading = el('h2', 'group__title');
-      heading.appendChild(document.createTextNode(category));
+
+      const toggle = el('button', 'group__toggle');
+      toggle.type = 'button';
+      toggle.setAttribute('aria-expanded', String(expanded));
+      toggle.setAttribute('aria-controls', groupId + '-items');
+
+      const label = el('span', 'group__label');
+      label.textContent = category;
+      toggle.appendChild(label);
 
       const count = el('span', 'group__count');
       count.textContent = groupItems.length + (groupItems.length === 1 ? ' item' : ' items');
-      heading.appendChild(count);
+      toggle.appendChild(count);
+
+      const chevron = el('span', 'group__chevron');
+      chevron.setAttribute('aria-hidden', 'true');
+      toggle.appendChild(chevron);
+      heading.appendChild(toggle);
 
       const grid = el('div', 'menu-grid');
+      grid.setAttribute('id', groupId + '-items');
+      grid.className += ' group__items';
+      grid.hidden = !expanded;
+      grid.setAttribute('role', 'region');
+      grid.setAttribute('aria-labelledby', groupId + '-toggle');
+      toggle.setAttribute('id', groupId + '-toggle');
+      toggle.addEventListener('click', () => {
+        const expanded = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!expanded));
+        grid.hidden = expanded;
+      });
       groupItems.forEach((item) => grid.appendChild(buildCard(item)));
 
       section.appendChild(heading);

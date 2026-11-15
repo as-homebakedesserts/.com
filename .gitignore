@@ -1,14 +1,25 @@
-installation part/
-1menu-images-host-ready.csv/
-1menu-images.csv/
-poc/1menu-images-host-ready.csv/
-poc/1menu-images.csv/
-poc/PROJECT-HANDOFF.md/
-poc/payment-backend/
-archive/
-/PROJECT-STATUS.md
-/appScript
-/menu-images.csv
-.vscode/
-owner-editor/
-payment-backend/
+# Ignore everything unless it is explicitly allowed below.
+/*
+
+# GitHub Pages deployment workflow.
+!/.github/
+/.github/*
+!/.github/workflows/
+/.github/workflows/*
+!/.github/workflows/pages.yml
+
+# Repository instructions and website files.
+!/.gitignore
+!/README.md
+!/developer-avatar.png
+!/image-urls.js
+!/image.png
+!/index.html
+!/menu-images.csv
+!/order-test.js
+!/order.js
+!/script.js
+!/site-config.js
+!/smoke-test.js
+!/style.css
+!/submit-order.js

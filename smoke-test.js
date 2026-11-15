@@ -306,6 +306,26 @@ const HAPPY_PROBE = (url) => !/example\.invalid/.test(url);
   check('both unavailable rows are hidden', cards === DATA_LINES.length - 2,
     cards + ' of ' + DATA_LINES.length + ' sheet rows');
   check('4 category sections', (html.match(/class="group"/g) || []).length === 4);
+  const groups = menu.dom.menu.children[0].children;
+  const firstToggle = groups[0].children[0].children[0];
+  const firstItems = groups[0].children[1];
+  const secondToggle = groups[1].children[0].children[0];
+  const secondItems = groups[1].children[1];
+  check('first category starts expanded',
+    firstToggle.getAttribute('aria-expanded') === 'true' && !firstItems.hidden);
+  check('other categories start collapsed',
+    secondToggle.getAttribute('aria-expanded') === 'false' && secondItems.hidden);
+  check('category toggle is linked to its own item panel',
+    firstToggle.getAttribute('aria-controls') === firstItems.getAttribute('id') &&
+    firstItems.getAttribute('aria-labelledby') === firstToggle.getAttribute('id'));
+  firstToggle.listeners.click[0]();
+  check('category click collapses its items',
+    firstToggle.getAttribute('aria-expanded') === 'false' && firstItems.hidden);
+  check('opening a category leaves other categories closed',
+    secondToggle.getAttribute('aria-expanded') === 'false' && secondItems.hidden);
+  firstToggle.listeners.click[0]();
+  check('category click reopens its items',
+    firstToggle.getAttribute('aria-expanded') === 'true' && !firstItems.hidden);
   check('category order preserved',
     positions.every((p) => p !== -1) && positions.every((p, i) => i === 0 || p > positions[i - 1]),
     JSON.stringify(positions));
