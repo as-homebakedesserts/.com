@@ -12,7 +12,7 @@ window.CAFE_ORDER = {
   appsScriptUrl: 'https://script.google.com/macros/s/AKfycbyo3eUSPxpfAof8c_dOKlZST3I2LK8wI9CwVA59zsZIBppQdjca_ZMuwV8RC43zBKV68w/exec',
 
   // WhatsApp click-to-chat number: digits only, with country code and no "+".
-  whatsappNumber: '917338888957',
+  whatsappNumber: '919003244405',
 
   // Public payment details used to build the on-page UPI link and QR.
   upiId: 'anjumt01@ptyes',
