@@ -2,11 +2,19 @@
   "use strict";
 
   var menuLink = document.getElementById("bakery-menu-link");
+  var isBakerSubdirectory =
+    window.location.pathname.indexOf("/Baker/") !== -1;
+
+  var homeLink = document.getElementById("bakery-home-link");
+  if (homeLink) {
+    homeLink.href = isBakerSubdirectory
+      ? "index.html?home=1"
+      : "Baker/index.html?home=1";
+  }
+
   if (menuLink) {
     menuLink.href =
-      window.location.pathname.indexOf("/Baker/") !== -1
-        ? "../index.html"
-        : "menu/";
+      isBakerSubdirectory ? "../index.html" : "menu/";
   }
 
   var canvas = document.getElementById("bakery-3d-canvas");

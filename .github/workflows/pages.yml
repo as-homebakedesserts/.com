@@ -44,8 +44,9 @@ jobs:
           '
       - name: Assemble bakery homepage and menu
         run: |
-          mkdir -p site/menu
+          mkdir -p site/menu site/Baker
           cp -R Baker/. site/
+          cp -R Baker/. site/Baker/
           cp Baker/3d-bakery.html site/index.html
           cp index.html style.css script.js site-config.js image-urls.js submit-order.js order.js menu-images.csv developer-avatar.png site/menu/
       - uses: actions/configure-pages@v5

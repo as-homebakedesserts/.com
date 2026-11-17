@@ -405,13 +405,16 @@ const HAPPY_PROBE = (url) => !/example\.invalid/.test(url);
   {
     const orderPage = fs.readFileSync(path.join(__dirname, 'Baker', 'order.html'), 'utf8');
     const footer = fs.readFileSync(path.join(__dirname, 'Baker', 'footer.html'), 'utf8');
+    const pagesWorkflow = fs.readFileSync(path.join(__dirname, '.github', 'workflows', 'pages.yml'), 'utf8');
     const bakery3dPage = fs.readFileSync(path.join(__dirname, 'Baker', '3d-bakery.html'), 'utf8');
     const bakery3dScript = fs.readFileSync(path.join(__dirname, 'Baker', 'js', '3d-bakery.js'), 'utf8');
     const orderPageScript = fs.readFileSync(path.join(__dirname, 'Baker', 'js', 'order-page.js'), 'utf8');
     function resolveBakeryMenuHref(pathname) {
       const menuLink = { href: '../index.html' };
+      const homeLink = { href: 'index.html?home=1' };
       const elements = {
         'bakery-menu-link': menuLink,
+        'bakery-home-link': homeLink,
         'bakery-3d-canvas': {},
         'bakery-3d-loader': { textContent: '' }
       };
@@ -425,7 +428,7 @@ const HAPPY_PROBE = (url) => !/example\.invalid/.test(url);
       };
 
       vm.runInNewContext(bakery3dScript, context);
-      return menuLink.href;
+      return { homeHref: homeLink.href, menuHref: menuLink.href };
     }
     function resolveBakeryOrderPagePaths(pathname) {
       const frame = {
@@ -474,15 +477,20 @@ const HAPPY_PROBE = (url) => !/example\.invalid/.test(url);
         historyUrl: historyLink.href
       };
     }
-    const previewPaths = resolveBakeryOrderPagePaths('/repo/Baker/order.html');
-    const pagesPaths = resolveBakeryOrderPagePaths('/repo/order.html');
-    const previewMenuHref = resolveBakeryMenuHref('/repo/Baker/3d-bakery.html');
-    const pagesMenuHref = resolveBakeryMenuHref('/repo/');
+    const previewOrderPaths = resolveBakeryOrderPagePaths('/repo/Baker/order.html');
+    const pagesOrderPaths = resolveBakeryOrderPagePaths('/repo/order.html');
+    const previewPaths = resolveBakeryMenuHref('/repo/Baker/3d-bakery.html');
+    const pagesPaths = resolveBakeryMenuHref('/repo/');
 
+    check('the 3D bakery home button reaches Baker/index.html in both layouts',
+      /id="bakery-home-link"[\s\S]*?href="index\.html\?home=1"/.test(bakery3dPage) &&
+      previewPaths.homeHref === 'index.html?home=1' &&
+      pagesPaths.homeHref === 'Baker/index.html?home=1' &&
+      /cp -R Baker\/\. site\/Baker\//.test(pagesWorkflow));
     check('the 3D bakery shopping-bag button points to the menu in both layouts',
       /id="bakery-menu-link"[\s\S]*?href="\.\.\/index\.html"/.test(bakery3dPage) &&
-      previewMenuHref === '../index.html' &&
-      pagesMenuHref === 'menu/');
+      previewPaths.menuHref === '../index.html' &&
+      pagesPaths.menuHref === 'menu/');
     check('the order-page hero prominently names A&S Home Bake Desserts',
       /<h1>A&amp;S Home Bake<br \/>Desserts<\/h1>/.test(orderPage));
     check('the menu section explains A&S ordering and advance notice',
@@ -490,12 +498,12 @@ const HAPPY_PROBE = (url) => !/example\.invalid/.test(url);
       /Please order 2-3 days in advance/.test(orderPage) &&
       !/existing online ordering service/.test(orderPage));
     check('the order page selects valid menu and config paths in both layouts',
-      previewPaths.configUrl === '../site-config.js' &&
-      previewPaths.frameUrl === '../index.html?embed=1' &&
-      pagesPaths.configUrl === 'menu/site-config.js' &&
-      pagesPaths.frameUrl === 'menu/?embed=1' &&
-      previewPaths.historyUrl === 'https://script.google.com/macros/s/test/exec?action=history' &&
-      pagesPaths.historyUrl === previewPaths.historyUrl);
+      previewOrderPaths.configUrl === '../site-config.js' &&
+      previewOrderPaths.frameUrl === '../index.html?embed=1' &&
+      pagesOrderPaths.configUrl === 'menu/site-config.js' &&
+      pagesOrderPaths.frameUrl === 'menu/?embed=1' &&
+      previewOrderPaths.historyUrl === 'https://script.google.com/macros/s/test/exec?action=history' &&
+      pagesOrderPaths.historyUrl === previewOrderPaths.historyUrl);
     check('the shared bakery footer contains A&S-specific copy, not template content',
       /Home-baked cakes, desserts, and millet bakes/.test(footer) &&
       !/Duden|Buy &amp; Sell|your-email@example\.com|Tea\+Talkies/i.test(footer));
