@@ -401,6 +401,18 @@ const HAPPY_PROBE = (url) => !/example\.invalid/.test(url);
       /id="menu"/.test(html) && /id="cartBar"/.test(html));
   }
 
+  section('A&S bakery branding');
+  {
+    const orderPage = fs.readFileSync(path.join(__dirname, 'Baker', 'order.html'), 'utf8');
+    const footer = fs.readFileSync(path.join(__dirname, 'Baker', 'footer.html'), 'utf8');
+
+    check('the order-page hero prominently names A&S Home Bake Desserts',
+      /<h1>A&amp;S Home Bake<br \/>Desserts<\/h1>/.test(orderPage));
+    check('the shared bakery footer contains A&S-specific copy, not template content',
+      /Home-baked cakes, desserts, and millet bakes/.test(footer) &&
+      !/Duden|Buy &amp; Sell|your-email@example\.com|Tea\+Talkies/i.test(footer));
+  }
+
   section('test bench');
   const bench = await runCase({ respond: okResponse, probe: HAPPY_PROBE });
   check('?bench=1 brings it back for a developer',
