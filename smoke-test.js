@@ -408,6 +408,10 @@ const HAPPY_PROBE = (url) => !/example\.invalid/.test(url);
 
     check('the order-page hero prominently names A&S Home Bake Desserts',
       /<h1>A&amp;S Home Bake<br \/>Desserts<\/h1>/.test(orderPage));
+    check('the menu section explains A&S ordering and advance notice',
+      /Browse current A&amp;S bakes, add items to your cart/.test(orderPage) &&
+      /Please order 2-3 days in advance/.test(orderPage) &&
+      !/existing online ordering service/.test(orderPage));
     check('the shared bakery footer contains A&S-specific copy, not template content',
       /Home-baked cakes, desserts, and millet bakes/.test(footer) &&
       !/Duden|Buy &amp; Sell|your-email@example\.com|Tea\+Talkies/i.test(footer));
