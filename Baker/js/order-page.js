@@ -3,13 +3,24 @@
 
   var frame = document.querySelector(".bakery-order-frame");
   var historyLink = document.querySelector(".order-page-hero-history");
-  if (historyLink) {
+  var isBakerSubdirectory = /\/Baker\//i.test(window.location.pathname);
+  var frameUrl = isBakerSubdirectory
+    ? "../index.html?embed=1"
+    : "menu/?embed=1";
+
+  function configureOrderHistory() {
     var config = window.CAFE_ORDER;
     var appsScriptUrl = String((config && config.appsScriptUrl) || "").trim();
-    if (/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(appsScriptUrl)) {
+    if (
+      historyLink &&
+      /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(appsScriptUrl)
+    ) {
       historyLink.href = appsScriptUrl + "?action=history";
       historyLink.removeAttribute("aria-disabled");
-    } else {
+      return;
+    }
+
+    if (historyLink) {
       historyLink.removeAttribute("href");
       historyLink.setAttribute("tabindex", "-1");
       var historyStatus = document.getElementById("order-history-status");
@@ -19,7 +30,6 @@
       }
     }
   }
-  if (!frame) return;
 
   var frameWindow;
   var resizeObserver;
@@ -67,5 +77,24 @@
     fitFrameToMenu();
   }
 
-  frame.addEventListener("load", observeMenu);
+  function loadMenuFrame() {
+    if (!frame) return;
+    frame.addEventListener("load", observeMenu);
+    frame.src = frameUrl;
+  }
+
+  var configScript = document.createElement("script");
+  configScript.src = isBakerSubdirectory
+    ? "../site-config.js"
+    : "menu/site-config.js";
+  configScript.onload = function () {
+    configureOrderHistory();
+    loadMenuFrame();
+  };
+  configScript.onerror = function () {
+    console.error("Could not load bakery order configuration from " + configScript.src);
+    configureOrderHistory();
+    loadMenuFrame();
+  };
+  document.head.appendChild(configScript);
 })();

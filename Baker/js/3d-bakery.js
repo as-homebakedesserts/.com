@@ -1,6 +1,14 @@
 (function () {
   "use strict";
 
+  var menuLink = document.getElementById("bakery-menu-link");
+  if (menuLink) {
+    menuLink.href =
+      window.location.pathname.indexOf("/Baker/") !== -1
+        ? "../index.html"
+        : "menu/";
+  }
+
   var canvas = document.getElementById("bakery-3d-canvas");
   var loaderMessage = document.getElementById("bakery-3d-loader");
   var assetRoot =
