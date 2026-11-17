@@ -7,6 +7,11 @@
 <meta name="description" content="Browse the current cafe menu and send an order. Get order and UPI payment updates by email, with optional WhatsApp messages.">
 <meta name="color-scheme" content="light">
 
+<script>
+  if (new URLSearchParams(window.location.search).has('embed')) {
+    document.documentElement.classList.add('is-embedded');
+  }
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Karla:wght@400;500;700&display=swap">
@@ -25,6 +30,10 @@
       <span id="imageSummary" class="masthead__images"></span>
     </p>
     <button type="button" id="profileEdit" class="btn btn--ghost profile-edit">Save my details</button>
+    <nav class="bakery-links" aria-label="Bakery website">
+      <a class="btn" href="Baker/index.html?home=1">A&amp;S Home Bake Desserts</a>
+      <a class="btn btn--ghost" href="Baker/3d-bakery.html">Explore the 3D bakehouse</a>
+    </nav>
   </header>
 
   <section id="bench" class="bench" aria-labelledby="benchTitle" hidden>

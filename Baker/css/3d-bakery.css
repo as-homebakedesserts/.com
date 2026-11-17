@@ -1,0 +1,151 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Roboto:wght@400;500&display=swap");
+
+:root {
+  --gold: #eaa636;
+  --cream: #fdf5eb;
+  --ink: #1e1916;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+body {
+  background: #d2cfc8;
+  color: var(--ink);
+  font-family: Roboto, sans-serif;
+}
+.bakery-3d-page {
+  min-height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+#bakery-3d-canvas {
+  display: block;
+  filter: brightness(1.05) contrast(0.86) saturate(0.92);
+  width: 100%;
+  height: 100vh;
+  cursor: grab;
+}
+#bakery-3d-canvas:active {
+  cursor: grabbing;
+}
+.bakery-3d-brand {
+  background: rgba(253, 245, 235, 0.9);
+  border: 1px solid rgba(30, 25, 22, 0.14);
+  border-radius: 999px;
+  box-shadow: 0 3px 14px rgba(30, 25, 22, 0.12);
+  color: var(--ink);
+  font-family: "Playfair Display", serif;
+  font-size: 1rem;
+  font-weight: 700;
+  left: 50%;
+  padding: 0.6rem 1rem;
+  position: fixed;
+  text-decoration: none;
+  top: max(0.75rem, env(safe-area-inset-top));
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: 2;
+}
+.bakery-3d-brand:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.bakery-3d-credit {
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  color: #1e1916;
+  font-size: 0.7rem;
+  left: max(1rem, env(safe-area-inset-left));
+  line-height: 1.35;
+  max-width: min(18rem, calc(100vw - 12rem));
+  position: fixed;
+  text-decoration: none;
+  text-shadow: 0 1px 3px rgba(253, 245, 235, 0.95);
+  z-index: 2;
+}
+.bakery-3d-credit:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.bakery-3d-controls {
+  bottom: 1rem;
+  display: flex;
+  gap: 0.65rem;
+  position: fixed;
+  right: 1rem;
+  z-index: 2;
+}
+.bakery-3d-control {
+  align-items: center;
+  background: rgba(253, 245, 235, 0.92);
+  border: 1px solid rgba(30, 25, 22, 0.2);
+  border-radius: 50%;
+  box-shadow: 0 3px 14px rgba(30, 25, 22, 0.18);
+  color: var(--ink);
+  cursor: pointer;
+  display: grid;
+  height: 48px;
+  justify-items: center;
+  padding: 0;
+  text-decoration: none;
+  width: 48px;
+}
+.bakery-3d-control:hover,
+.bakery-3d-control[aria-pressed="true"] {
+  background: var(--gold);
+}
+.bakery-3d-control:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.bakery-3d-control svg {
+  fill: none;
+  height: 22px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  width: 22px;
+}
+.bakery-3d-control[hidden] {
+  display: none;
+}
+.bakery-motion-notice {
+  background: rgba(253, 245, 235, 0.96);
+  border: 1px solid rgba(30, 25, 22, 0.18);
+  border-radius: 12px;
+  bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  box-shadow: 0 3px 14px rgba(30, 25, 22, 0.14);
+  color: var(--ink);
+  left: max(1rem, env(safe-area-inset-left));
+  max-width: min(24rem, calc(100vw - 2rem));
+  padding: 0.65rem 0.8rem;
+  pointer-events: none;
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 3;
+}
+.visually-hidden {
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+@media (max-width: 600px) {
+  .bakery-3d-controls {
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    right: max(1rem, env(safe-area-inset-right));
+  }
+  .bakery-3d-control {
+    height: 44px;
+    width: 44px;
+  }
+}

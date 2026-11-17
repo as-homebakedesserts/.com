@@ -11,6 +11,7 @@
 # Repository instructions and website files.
 !/.gitignore
 !/README.md
+!/Baker/
 !/developer-avatar.png
 !/image-urls.js
 !/image.png

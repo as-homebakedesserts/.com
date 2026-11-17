@@ -37,13 +37,14 @@ No build step, no bundler, no server. It is plain files deployed by GitHub Actio
 |------|------|
 | `site-config.js` | Published menu URL, currency, Apps Script URL, and public WhatsApp/UPI payment details. |
 | `index.html` | Page shell, cart drawer, order form, and the image URL test bench. |
+| `Baker/` | Bakery information pages and a responsive 3D tour with optional phone-tilt controls (HTTPS required for phone sensors); `Baker/order.html` embeds this POC's live menu and UPI checkout in `embed` mode, with a link to verified order history. |
 | `script.js` | Fetches the CSV, renders menu cards. |
 | `image-urls.js` | Works out a loadable photo URL from whatever the `Image` column holds. |
 | `submit-order.js` | Sends order requests to the Apps Script Web App. |
 | `order.js` | Cart, totals, customer details, and order state. |
 | `style.css` | All styling. |
 | `menu-images.csv` | Bundled sample sheet, used when `MENU_CSV_URL` is blank. |
-| `payment-backend/Code.gs` | Apps Script order logger, email/WhatsApp sender, and owner payment confirmation. |
+| `appScript` | Apps Script order logger, email/WhatsApp sender, owner payment confirmation, and verified order-history lookup. |
 | `owner-editor/` | Private Google Apps Script editor so the owner can change the sheet from a phone. |
 
 Scripts load with `defer` in dependency order, so the Apps Script transport and `order.js` are
@@ -58,6 +59,7 @@ PapaParse is loaded from jsDelivr. There is no build step, npm install, or lockf
 3. Apps Script writes the order to the separate `Orders` sheet, emails the customer a **Pay with UPI** HTTPS button, and emails the cafe an order notification. The payment-pending step builds the same payment-page URL using only the stable order ID: `?action=pay&orderId=...`. That page reads the payment amount from the `Orders` sheet and the UPI ID from Apps Script configuration; the browser does not put a customer-editable amount or UPI ID in this payment-page URL. The existing optional local QR/direct UPI link remains available. After submission, the customer can tap **Send order on WhatsApp** to open a prefilled `wa.me` message; the customer must tap **Send** in WhatsApp. This click-to-chat option uses no WhatsApp API or paid service. Set `CAFE_ORDER.whatsappNumber` in `site-config.js` to the cafe's phone number using digits only, including country code and without `+` (for example, `919876543210`); leave it empty to hide the button.
 4. The customer can tap **Open UPI app**, or scan the display-only on-page QR from another device. The **Having trouble? Open payment page** link is available as a fallback; it looks up the order by its ID and does not accept an amount from the URL. If the order is not found—such as during a brief delay while Apps Script writes it—wait a minute and refresh, or use the payment link in the email. The email remains the confirmation of record because the browser cannot read the `no-cors` submission response.
 5. After checking the bank app, the owner opens the email link and presses **Confirm payment received**. Apps Script updates the order and emails the customer. For the free click-to-chat flow, the owner replies manually from the WhatsApp Business app with payment details and later confirms payment there. The customer's message opens WhatsApp's 24-hour service window, during which the cafe can reply manually at no charge; the cafe does not send messages automatically through the website.
+6. Customers can open **Past orders** from the menu page and request a six-digit code by email. The verification form and results stay in the same page; after verification it lists orders for that email, newest first, with their status and a payment-details link for pending orders. Codes expire after 10 minutes, allow five attempts, and are rate limited per email. Starting a new cart does not delete submitted orders from the `Orders` sheet.
 
 `CAFE_ORDER.upiId` and `CAFE_ORDER.payeeName` in `site-config.js` control the optional browser QR. Keep the UPI ID synchronized with Apps Script's `CONFIG.UPI_ID`. The payment-page URL contains only the order ID; the page uses the sheet total and configured UPI ID. The optional browser QR amount is calculated from the browser's order and is not trusted payment evidence; the cafe must compare it with the bank app before confirming.
 
@@ -90,10 +92,10 @@ Apps Script content responses redirect to a one-time Google-hosted URL and do no
   `menu-images.csv` file is not present. The configured remote CSV may still
   allow the deployed menu to work; restore the sample or update the test and
   local fallback before relying on local-sample mode.
-- `payment-backend/Code.gs` is a deployment template with placeholder
-  configuration. Keep the configured Apps Script source private and verify the
-  active deployment version in Google Apps Script; a local source edit does not
-  update an existing Web App deployment.
+- `appScript` is the Apps Script source used by the order Web App. A local source
+  edit does not update an existing deployment; copy the changes into the
+  configured Apps Script project and deploy a new Web App version before using
+  order-history lookup.
 - The repository checks do not test Google Sheet permissions, Apps Script
   authorization/quotas, email delivery, WhatsApp setup, or real UPI payment.
   Verify those in the corresponding Google/Meta services with a controlled
@@ -139,7 +141,7 @@ node order-test.js
   the parsers, the fetch failure paths, and that the developer test bench stays hidden unless
   `?bench=1` is set.
 - `order-test.js` — cart validation, Apps Script payloads, no-CORS transport, stable IDs on retries,
-  pending-order recovery, the honeypot, and checks that no EmailJS or customer-side payment claim remains.
+  pending-order recovery, email-verified order history, the honeypot, and checks that no EmailJS or customer-side payment claim remains.
 
 Both run the real files in a `vm` sandbox against a stub DOM and fake `localStorage`; no live Apps Script
 deployment or network access is needed.

@@ -5,7 +5,7 @@ const path = require('path');
 const ORDER = fs.readFileSync(path.join(__dirname, 'order.js'), 'utf8');
 const TRANSPORT = fs.readFileSync(path.join(__dirname, 'submit-order.js'), 'utf8');
 const HTML = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-const BACKEND = fs.readFileSync(path.join(__dirname, 'payment-backend', 'Code.gs'), 'utf8');
+const BACKEND = fs.readFileSync(path.join(__dirname, 'appScript'), 'utf8');
 
 const IDS = [
   'menu', 'cartBar', 'cartBarCount', 'cartBarTotal', 'cart', 'cartClose', 'stepCart',
@@ -769,9 +769,63 @@ function check(label, condition, detail) {
     getContentType() { return 'image/png'; },
     setName(name) { this.name = name; return this; }
   };
+  const historyCacheValues = new Map();
+  const historyRows = [
+    ['OrderID', 'Timestamp', 'CustomerName', 'CustomerEmail', 'Items', 'Total', 'Status', 'Token',
+      'CustomerPhone', 'WhatsAppOptIn', 'WhatsAppOrderStatus', 'WhatsAppPaymentStatus'],
+    ['ORD-OLD123', new Date('2026-01-02T10:00:00Z'), 'A Customer', 'customer@example.com',
+      '2 x <script>alert(1)</script>', 12.5, 'Pending Payment', 'private-token',
+      '919876543210', true, '', ''],
+    ['ORD-NEW456', new Date('2026-02-03T10:00:00Z'), 'A Customer', 'customer@example.com',
+      '1 x New cake', 20, 'Paid — Preparing', 'another-private-token',
+      '', false, 'Not opted in', 'Not opted in'],
+    ['ORD-OTHER789', new Date('2026-02-04T10:00:00Z'), 'Another Customer', 'other@example.com',
+      '1 x Other cake', 8, 'Pending Payment', 'other-token', '', false, '', '']
+  ];
+  let historyUuidCount = 0;
+  const historySheet = {
+    getLastRow() { return historyRows.length; },
+    getRange(row, column, rowCount, columnCount) {
+      return {
+        getValues() {
+          return historyRows.slice(row - 1, row - 1 + rowCount).map((cells) =>
+            cells.slice(column - 1, column - 1 + columnCount)
+          );
+        }
+      };
+    }
+  };
   const backendContext = vm.createContext({
     encodeURIComponent,
     MailApp: { sendEmail(message) { sentEmails.push(message); } },
+    CacheService: {
+      getScriptCache() {
+        return {
+          get(key) { return historyCacheValues.has(key) ? historyCacheValues.get(key) : null; },
+          put(key, value) { historyCacheValues.set(key, String(value)); },
+          remove(key) { historyCacheValues.delete(key); }
+        };
+      }
+    },
+    LockService: {
+      getScriptLock() { return { waitLock() {}, releaseLock() {} }; }
+    },
+    SpreadsheetApp: {
+      openById() { return { getSheetByName() { return historySheet; } }; }
+    },
+    Utilities: {
+      DigestAlgorithm: { SHA_256: 'SHA_256' },
+      computeDigest(algorithm, value) {
+        return Array.from(String(value), (char) => char.charCodeAt(0) & 255);
+      },
+      base64EncodeWebSafe(bytes) { return bytes.join('-'); },
+      getUuid() {
+        historyUuidCount += 1;
+        return 'abcdef12-0000-4000-8000-' + String(historyUuidCount).padStart(12, '0');
+      },
+      formatDate(date) { return date.toISOString(); }
+    },
+    Session: { getScriptTimeZone() { return 'UTC'; } },
     UrlFetchApp: {
       fetch(url, options) {
         if (url.includes('graph.facebook.com')) {
@@ -811,6 +865,112 @@ function check(label, condition, detail) {
     qrRequests.length === 1 &&
     qrRequests[0].url.includes(encodeURIComponent('ORD-QRTEST123')) &&
     backendErrors.some((message) => message.includes('QR image service authorized')));
+  const historyStartPage = backendContext.doGet({ parameter: { action: 'history' } }).html;
+  const historyEmailForm = historyStartPage.match(/<form id="history-email-form"[^>]*>/);
+  check('history lookup starts with an email-only verification form',
+    Boolean(historyEmailForm) &&
+    historyStartPage.includes('id="history-email-form"') &&
+    historyStartPage.includes('name="email"') &&
+    historyStartPage.includes('id="history-code-form" hidden') &&
+    historyStartPage.includes('requestOrderHistoryCode') &&
+    historyStartPage.includes('verifyOrderHistoryCode') &&
+    !/method="post"|target="_top"/.test(historyEmailForm[0]) &&
+    !historyStartPage.includes('ORD-OLD123'));
+  const historyClientScript = historyStartPage.match(/<script>([\s\S]*?)<\/script>/);
+  let historyClientScriptValid = false;
+  try {
+    if (historyClientScript) new vm.Script(historyClientScript[1]);
+    historyClientScriptValid = Boolean(historyClientScript);
+  } catch (error) {
+    historyClientScriptValid = false;
+  }
+  check('history page client script is valid JavaScript', historyClientScriptValid);
+  const historyEmailStart = sentEmails.length;
+  const historyCodePage = backendContext.doPost({
+    parameter: { action: 'requestHistoryCode', email: ' Customer@example.com ' }
+  }).html;
+  const historyVerificationEmail = sentEmails.slice(historyEmailStart).find((message) =>
+    message.subject.includes('order history verification code')
+  );
+  const historyCodeMatch = historyVerificationEmail &&
+    historyVerificationEmail.body.match(/code is (\d{6})/);
+  const historyCode = historyCodeMatch && historyCodeMatch[1];
+  check('history request sends a time-limited code only to an order email',
+    Boolean(historyCode) &&
+    historyCodePage.includes('If orders are associated with that email') &&
+    historyCodePage.includes('name="action" value="verifyHistoryCode"'));
+  const beforeRateLimitEmailCount = sentEmails.length;
+  const rateLimitedHistoryRequest = backendContext.doPost({
+    parameter: { action: 'requestHistoryCode', email: 'customer@example.com' }
+  }).html;
+  check('history verification requests are rate limited per email',
+    rateLimitedHistoryRequest.includes('Too many verification requests') &&
+    rateLimitedHistoryRequest.includes('id="history-code"') &&
+    rateLimitedHistoryRequest.includes('enter it here') &&
+    sentEmails.length === beforeRateLimitEmailCount);
+  const rateLimitedInPageHistoryRequest =
+    backendContext.requestOrderHistoryCode('customer@example.com');
+  check('a second device can enter a recently sent history code without another email',
+    rateLimitedInPageHistoryRequest.nextStep === 'code' &&
+    rateLimitedInPageHistoryRequest.email === 'customer@example.com' &&
+    rateLimitedInPageHistoryRequest.message.includes('enter it here') &&
+    sentEmails.length === beforeRateLimitEmailCount);
+  const noOrderEmailCount = sentEmails.length;
+  const noOrdersCodePage = backendContext.doPost({
+    parameter: { action: 'requestHistoryCode', email: 'no-orders@example.com' }
+  }).html;
+  check('unknown email receives the same generic response without a verification email',
+    noOrdersCodePage.includes('If orders are associated with that email') &&
+    sentEmails.length === noOrderEmailCount);
+  const wrongHistoryCode = historyCode === '000000' ? '000001' : '000000';
+  const wrongHistoryCodePage = backendContext.doPost({
+    parameter: {
+      action: 'verifyHistoryCode',
+      email: 'customer@example.com',
+      code: wrongHistoryCode
+    }
+  }).html;
+  check('an incorrect history code does not reveal orders',
+    wrongHistoryCodePage.includes('That code is not valid') &&
+    !wrongHistoryCodePage.includes('ORD-OLD123'));
+  const historyResults = backendContext.doPost({
+    parameter: { action: 'verifyHistoryCode', email: 'customer@example.com', code: historyCode }
+  }).html;
+  check('verified history lists the customer’s orders newest first with payment details',
+    historyResults.indexOf('ORD-NEW456') < historyResults.indexOf('ORD-OLD123') &&
+    historyResults.includes('Paid — Preparing') &&
+    historyResults.includes('action=pay&amp;orderId=ORD-OLD123'));
+  check('history escapes stored item text and omits private contact and token fields',
+    historyResults.includes('&lt;script&gt;alert(1)&lt;/script&gt;') &&
+    !historyResults.includes('<script>alert(1)</script>') &&
+    !historyResults.includes('919876543210') &&
+    !historyResults.includes('private-token'));
+  const reusedHistoryCode = backendContext.doPost({
+    parameter: { action: 'verifyHistoryCode', email: 'customer@example.com', code: historyCode }
+  }).html;
+  check('verified history codes cannot be reused',
+    reusedHistoryCode.includes('expired or reached its attempt limit') &&
+    !reusedHistoryCode.includes('ORD-OLD123'));
+  const clientHistoryRequest = backendContext.requestOrderHistoryCode('other@example.com');
+  const clientHistoryEmail = sentEmails[sentEmails.length - 1];
+  const clientHistoryCodeMatch = clientHistoryEmail.body.match(/code is (\d{6})/);
+  const clientHistoryCode = clientHistoryCodeMatch && clientHistoryCodeMatch[1];
+  check('in-page history request returns the verification step without exposing order existence',
+    clientHistoryRequest.nextStep === 'code' &&
+    clientHistoryRequest.message.includes('If orders are associated with that email') &&
+    !Object.prototype.hasOwnProperty.call(clientHistoryRequest, 'orders'));
+  const clientHistory = backendContext.verifyOrderHistoryCode(
+    'other@example.com',
+    clientHistoryCode
+  );
+  check('in-page verification returns only display-safe order data',
+    clientHistory.success === true &&
+    clientHistory.orders.length === 1 &&
+    clientHistory.orders[0].orderId === 'ORD-OTHER789' &&
+    !Object.prototype.hasOwnProperty.call(clientHistory.orders[0], 'customerEmail') &&
+    !Object.prototype.hasOwnProperty.call(clientHistory.orders[0], 'token') &&
+    !Object.prototype.hasOwnProperty.call(clientHistory.orders[0], 'customerPhone'));
+  sentEmails.length = 0;
   const validationOrder = {
     orderId: 'ORD-WHATSAPP123',
     customerName: 'A Customer',
@@ -936,14 +1096,21 @@ function check(label, condition, detail) {
     paymentPageHtml.includes('Open UPI app') &&
     paymentPageHtml.includes('target="_top" href="upi://pay?') &&
     paymentPageHtml.includes('api.qrserver.com/v1/create-qr-code/') &&
-    paymentPageHtml.includes('alt="UPI payment QR code"') &&
+    paymentPageHtml.includes('alt="UPI QR payment"') &&
     paymentPageHtml.includes('INR 5.75') &&
     BACKEND.includes("params.action === 'pay'"));
+  check('payment details page offers a back link to order history',
+    paymentPageHtml.includes('Back to order history') &&
+    paymentPageHtml.includes('id="back-to-history"') &&
+    paymentPageHtml.includes('?action=history'));
+  check('payment page QR layout fits narrow phone screens',
+    paymentPageHtml.includes('box-sizing:border-box;width:260px;max-width:100%;height:auto'));
   vm.runInContext("sendOwnerNotifyEmail_({ orderId: 'ORD-TEST123', customerName: 'A Customer', customerEmail: 'customer@example.com', itemsText: 'Test item', totalPaise: 575 }, 'token-123')", backendContext);
   const ownerEmail = sentEmails[sentEmails.length - 1];
+  const configuredOwnerEmail = vm.runInContext('CONFIG.OWNER_EMAIL', backendContext);
   const ownerConfirmationUrl = vm.runInContext("CONFIG.WEB_APP_URL + '?orderId=ORD-TEST123&token=token-123'", backendContext);
   check('owner email has a styled confirmation button and a plain-text fallback',
-    ownerEmail.to === 'PASTE_YOUR_EMAIL_HERE' &&
+    ownerEmail.to === configuredOwnerEmail &&
     ownerEmail.htmlBody.includes('>Review and confirm payment</a>') &&
     ownerEmail.htmlBody.includes('href="' + ownerConfirmationUrl.replace(/&/g, '&amp;') + '"') &&
     ownerEmail.body.includes('verify payment in your banking app') &&
@@ -975,7 +1142,7 @@ function check(label, condition, detail) {
     BACKEND.includes('" target="_top">'));
   check('success and already-paid responses offer return to Gmail',
     BACKEND.includes("return gmailReturnResponse_('This order is already marked as paid.')") &&
-    /return gmailReturnResponse_\('Payment confirmed for order '\s*\+\s*escapeHtml_\(orderId\)/.test(BACKEND));
+    /return gmailReturnResponse_\(\s*'Payment confirmed for order '\s*\+\s*escapeHtml_\(orderId\)/.test(BACKEND));
   check('owner link requires a deliberate confirmation form', BACKEND.includes('value="confirmPaid"') && BACKEND.includes('Confirm payment received'));
 
   if (failures) {

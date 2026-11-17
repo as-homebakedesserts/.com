@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Explore The Bakehouse | A&amp;S Home Bake Desserts</title>
+    <link rel="stylesheet" href="css/3d-bakery.css" />
+  </head>
+  <body>
+    <main class="bakery-3d-page">
+      <canvas id="bakery-3d-canvas" aria-label="Interactive 3D bakery"></canvas>
+      <a class="bakery-3d-brand" href="index.html?home=1">A&amp;S Home Bake Desserts</a>
+      <a
+        class="bakery-3d-credit"
+        href="https://ali-akbar-k.github.io/PORTFOLIO/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Developed by <strong>Ali Akbar K</strong></a
+      >
+      <div
+        id="bakery-3d-loader"
+        class="bakery-3d-loader visually-hidden"
+        role="status"
+        aria-live="polite"
+      ></div>
+      <div class="bakery-3d-controls" aria-label="Bakehouse controls">
+        <a class="bakery-3d-control" href="index.html?home=1" aria-label="Home" title="Home">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" />
+          </svg>
+        </a>
+        <a class="bakery-3d-control" href="order.html" aria-label="Browse menu and order" title="Menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 8h14l1 13H4zM9 8V6a3 3 0 0 1 6 0v2" />
+          </svg>
+        </a>
+        <button
+          class="bakery-3d-control"
+          id="bakery-motion-toggle"
+          type="button"
+          aria-label="Enable phone tilt control"
+          aria-pressed="false"
+          title="Enable phone tilt control"
+          hidden
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="8" />
+            <path d="M12 2v5m0 10v5M2 12h5m10 0h5M7 7l3 3m4 4 3 3m0-10-3 3m-4 4-3 3" />
+          </svg>
+        </button>
+        <span id="bakery-motion-status" class="visually-hidden" aria-live="polite"></span>
+      </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r124/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://unpkg.com/three@0.126.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="js/3d-bakery.js"></script>
+  </body>
+</html>
