@@ -15,7 +15,8 @@ The menu is publicly viewable. Only people authorized by the cafe can edit the G
 
 ## Demo
 
-[View the live menu](https://ali-akbar-kolkar.github.io/daily-grind-menu/)
+[View the A&S 3D bakery homepage](https://as-homebakedesserts.github.io/.com/)
+[View the live menu and ordering page](https://as-homebakedesserts.github.io/.com/menu/)
 
 ## Diagram Source
 
@@ -120,8 +121,10 @@ Apps Script content responses redirect to a one-time Google-hosted URL and do no
 ## Deployment
 
 `pages.yml` checks out the repo, optionally rewrites the `window.MENU_CSV_URL` line in
-`site-config.js` from the `MENU_CSV_URL` repository variable, then publishes. Configure the
-Apps Script `/exec` URL in `site-config.js` before deploying the integrated checkout.
+`site-config.js` from the `MENU_CSV_URL` repository variable, stages the `Baker/` site at the
+Pages root, and publishes the cafe menu under `/menu/`. The 3D bakehouse is the homepage;
+the menu and ordering page is available at `/menu/`. Configure the Apps Script `/exec` URL in
+`site-config.js` before deploying the integrated checkout.
 
 It replaces **only that one line**, on purpose. An earlier version rewrote the whole file, which
 silently deleted the currency and the entire ordering config on every deploy.

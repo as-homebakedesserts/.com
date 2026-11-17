@@ -35,14 +35,18 @@ body {
   cursor: grabbing;
 }
 .bakery-3d-brand {
+  align-items: center;
   background: rgba(253, 245, 235, 0.9);
   border: 1px solid rgba(30, 25, 22, 0.14);
-  border-radius: 999px;
+  border-radius: 0.9rem;
   box-shadow: 0 3px 14px rgba(30, 25, 22, 0.12);
   color: var(--ink);
+  display: flex;
+  flex-direction: column;
   font-family: "Playfair Display", serif;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
+  gap: 0.1rem;
   left: 50%;
   padding: 0.6rem 1rem;
   position: fixed;
@@ -51,6 +55,13 @@ body {
   transform: translateX(-50%);
   white-space: nowrap;
   z-index: 2;
+}
+.bakery-3d-brand__tagline {
+  font-family: Roboto, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 .bakery-3d-brand:focus-visible {
   outline: 2px solid var(--ink);

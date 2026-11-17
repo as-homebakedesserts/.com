@@ -1,4 +1,4 @@
-name: Deploy cafe menu to GitHub Pages
+name: Deploy A&S bakery site to GitHub Pages
 
 on:
   push:
@@ -42,9 +42,15 @@ jobs:
             fs.writeFileSync(file, src.replace(re, "window.MENU_CSV_URL = " + JSON.stringify(url) + ";"));
             console.log("site-config.js now reads the sheet from the repo variable");
           '
+      - name: Assemble bakery homepage and menu
+        run: |
+          mkdir -p site/menu
+          cp -R Baker/. site/
+          cp Baker/3d-bakery.html site/index.html
+          cp index.html style.css script.js site-config.js image-urls.js submit-order.js order.js menu-images.csv developer-avatar.png site/menu/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: ./site
       - id: deployment
         uses: actions/deploy-pages@v4
