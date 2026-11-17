@@ -2,8 +2,11 @@
   "use strict";
 
   var menuLink = document.getElementById("bakery-menu-link");
+  var layoutMarker = document.querySelector('meta[name="bakery-layout"]');
   var isBakerSubdirectory =
     window.location.pathname.indexOf("/Baker/") !== -1;
+  var isNestedPagesDeployment =
+    isBakerSubdirectory && layoutMarker && layoutMarker.content === "pages";
 
   var homeLink = document.getElementById("bakery-home-link");
   if (homeLink) {
@@ -13,8 +16,11 @@
   }
 
   if (menuLink) {
-    menuLink.href =
-      isBakerSubdirectory ? "../index.html" : "menu/";
+    menuLink.href = isBakerSubdirectory
+      ? isNestedPagesDeployment
+        ? "../menu/"
+        : "../index.html"
+      : "menu/";
   }
 
   var canvas = document.getElementById("bakery-3d-canvas");

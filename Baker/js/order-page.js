@@ -3,10 +3,20 @@
 
   var frame = document.querySelector(".bakery-order-frame");
   var historyLink = document.querySelector(".order-page-hero-history");
+  var layoutMarker = document.querySelector('meta[name="bakery-layout"]');
   var isBakerSubdirectory = /\/Baker\//i.test(window.location.pathname);
+  var isNestedPagesDeployment =
+    isBakerSubdirectory && layoutMarker && layoutMarker.content === "pages";
   var frameUrl = isBakerSubdirectory
-    ? "../index.html?embed=1"
+    ? isNestedPagesDeployment
+      ? "../menu/?embed=1"
+      : "../index.html?embed=1"
     : "menu/?embed=1";
+  var configUrl = isBakerSubdirectory
+    ? isNestedPagesDeployment
+      ? "../menu/site-config.js"
+      : "../site-config.js"
+    : "menu/site-config.js";
 
   function configureOrderHistory() {
     var config = window.CAFE_ORDER;
@@ -84,9 +94,7 @@
   }
 
   var configScript = document.createElement("script");
-  configScript.src = isBakerSubdirectory
-    ? "../site-config.js"
-    : "menu/site-config.js";
+  configScript.src = configUrl;
   configScript.onload = function () {
     configureOrderHistory();
     loadMenuFrame();

@@ -409,9 +409,10 @@ const HAPPY_PROBE = (url) => !/example\.invalid/.test(url);
     const bakery3dPage = fs.readFileSync(path.join(__dirname, 'Baker', '3d-bakery.html'), 'utf8');
     const bakery3dScript = fs.readFileSync(path.join(__dirname, 'Baker', 'js', '3d-bakery.js'), 'utf8');
     const orderPageScript = fs.readFileSync(path.join(__dirname, 'Baker', 'js', 'order-page.js'), 'utf8');
-    function resolveBakeryMenuHref(pathname) {
+    function resolveBakeryMenuHref(pathname, layout) {
       const menuLink = { href: '../index.html' };
       const homeLink = { href: 'index.html?home=1' };
+      const layoutMarker = { content: layout || 'source' };
       const elements = {
         'bakery-menu-link': menuLink,
         'bakery-home-link': homeLink,
@@ -421,6 +422,9 @@ const HAPPY_PROBE = (url) => !/example\.invalid/.test(url);
       const context = {
         window: { location: { pathname: pathname } },
         document: {
+          querySelector(selector) {
+            return selector === 'meta[name="bakery-layout"]' ? layoutMarker : null;
+          },
           getElementById(id) {
             return elements[id] || null;
           }
@@ -430,7 +434,7 @@ const HAPPY_PROBE = (url) => !/example\.invalid/.test(url);
       vm.runInNewContext(bakery3dScript, context);
       return { homeHref: homeLink.href, menuHref: menuLink.href };
     }
-    function resolveBakeryOrderPagePaths(pathname) {
+    function resolveBakeryOrderPagePaths(pathname, layout) {
       const frame = {
         addEventListener() {},
         style: {},
@@ -444,9 +448,12 @@ const HAPPY_PROBE = (url) => !/example\.invalid/.test(url);
         setAttribute() {}
       };
       const configScript = {};
+      const layoutMarker = { content: layout || 'source' };
       const document = {
         querySelector(selector) {
-          return selector === '.bakery-order-frame' ? frame : historyLink;
+          if (selector === '.bakery-order-frame') return frame;
+          if (selector === 'meta[name="bakery-layout"]') return layoutMarker;
+          return historyLink;
         },
         getElementById() {
           return { hidden: true, textContent: '' };
@@ -478,32 +485,39 @@ const HAPPY_PROBE = (url) => !/example\.invalid/.test(url);
       };
     }
     const previewOrderPaths = resolveBakeryOrderPagePaths('/repo/Baker/order.html');
-    const pagesOrderPaths = resolveBakeryOrderPagePaths('/repo/order.html');
+    const pagesNestedOrderPaths = resolveBakeryOrderPagePaths('/repo/Baker/order.html', 'pages');
+    const pagesRootOrderPaths = resolveBakeryOrderPagePaths('/repo/order.html');
     const previewPaths = resolveBakeryMenuHref('/repo/Baker/3d-bakery.html');
     const pagesPaths = resolveBakeryMenuHref('/repo/');
+    const pagesNestedPaths = resolveBakeryMenuHref('/repo/Baker/3d-bakery.html', 'pages');
 
     check('the 3D bakery home button reaches Baker/index.html in both layouts',
       /id="bakery-home-link"[\s\S]*?href="index\.html\?home=1"/.test(bakery3dPage) &&
       previewPaths.homeHref === 'index.html?home=1' &&
       pagesPaths.homeHref === 'Baker/index.html?home=1' &&
       /cp -R Baker\/\. site\/Baker\//.test(pagesWorkflow));
-    check('the 3D bakery shopping-bag button points to the menu in both layouts',
+    check('the 3D bakery shopping-bag button points to the menu in each layout',
       /id="bakery-menu-link"[\s\S]*?href="\.\.\/index\.html"/.test(bakery3dPage) &&
       previewPaths.menuHref === '../index.html' &&
-      pagesPaths.menuHref === 'menu/');
+      pagesPaths.menuHref === 'menu/' &&
+      pagesNestedPaths.menuHref === '../menu/' &&
+      /sed -i .*bakery-layout.*content="pages".*site\/Baker\/order\.html.*site\/Baker\/3d-bakery\.html/.test(pagesWorkflow));
     check('the order-page hero prominently names A&S Home Bake Desserts',
       /<h1>A&amp;S Home Bake<br \/>Desserts<\/h1>/.test(orderPage));
     check('the menu section explains A&S ordering and advance notice',
       /Browse current A&amp;S bakes, add items to your cart/.test(orderPage) &&
       /Please order 2-3 days in advance/.test(orderPage) &&
       !/existing online ordering service/.test(orderPage));
-    check('the order page selects valid menu and config paths in both layouts',
+    check('the order page selects valid menu and config paths in each layout',
       previewOrderPaths.configUrl === '../site-config.js' &&
       previewOrderPaths.frameUrl === '../index.html?embed=1' &&
-      pagesOrderPaths.configUrl === 'menu/site-config.js' &&
-      pagesOrderPaths.frameUrl === 'menu/?embed=1' &&
+      pagesNestedOrderPaths.configUrl === '../menu/site-config.js' &&
+      pagesNestedOrderPaths.frameUrl === '../menu/?embed=1' &&
+      pagesRootOrderPaths.configUrl === 'menu/site-config.js' &&
+      pagesRootOrderPaths.frameUrl === 'menu/?embed=1' &&
       previewOrderPaths.historyUrl === 'https://script.google.com/macros/s/test/exec?action=history' &&
-      pagesOrderPaths.historyUrl === previewOrderPaths.historyUrl);
+      pagesNestedOrderPaths.historyUrl === previewOrderPaths.historyUrl &&
+      pagesRootOrderPaths.historyUrl === previewOrderPaths.historyUrl);
     check('the shared bakery footer contains A&S-specific copy, not template content',
       /Home-baked cakes, desserts, and millet bakes/.test(footer) &&
       !/Duden|Buy &amp; Sell|your-email@example\.com|Tea\+Talkies/i.test(footer));
