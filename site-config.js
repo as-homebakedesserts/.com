@@ -9,7 +9,7 @@ window.MENU_CURRENCY = 'INR';
 // Apps Script Web App URL. Deploy payment-backend/Code.gs as a Web App first.
 // Leave this placeholder until you have the deployment URL ending in /exec.
 window.CAFE_ORDER = {
-  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbyo3eUSPxpfAof8c_dOKlZST3I2LK8wI9CwVA59zsZIBppQdjca_ZMuwV8RC43zBKV68w/exec',
+  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbxY45Lq7u-Df6JOCBptmhL-DryzJkzYQ6mi4tHGqObD1NuKO6R5jrv1AQXJFnwXlOpg/exec',
 
   // WhatsApp click-to-chat number: digits only, with country code and no "+".
   whatsappNumber: '919003244405',
