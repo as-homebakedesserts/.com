@@ -390,6 +390,9 @@ const HAPPY_PROBE = (url) => !/example\.invalid/.test(url);
   {
     const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 
+    check('the menu page clearly displays the A&S bakery brand',
+      /<title>Menu &middot; A&amp;S Home Bake Desserts<\/title>/.test(html) &&
+      /<h1 class="masthead__title">A&amp;S Home Bake Desserts<\/h1>/.test(html));
     check('the bench ships hidden, so a cafe customer never sees it',
       /<section[^>]*id="bench"[^>]*\bhidden\b/.test(html) ||
       /<section[^>]*\bhidden\b[^>]*id="bench"/.test(html),
