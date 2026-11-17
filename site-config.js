@@ -1,7 +1,7 @@
 /* Site configuration. This is the only file you need to edit to go live. */
 
 // Published Google Sheet CSV. Leave blank to use the bundled menu-images.csv sample.
-window.MENU_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vToUFJhDlT8H5SQG8CqSxfFzhYQ_KNmx9dL1SAIcOXNZiSI4I7CyD7zgjYOlbPt3ZtWWQEYjlglybPN/pub?gid=810010135&single=true&output=csv';
+window.MENU_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR6NYlCgQzuWa36GTBcqv1HvSVjoJ-0NGgwU2brgpoKUOa-d6KM2UmcZoY3EZOAhnr0nsxlEEAlnDXN/pub?output=csv';
 
 // Currency for the menu card prices. Must match CAFE_ORDER.currency below.
 window.MENU_CURRENCY = 'INR';
@@ -12,11 +12,11 @@ window.CAFE_ORDER = {
   appsScriptUrl: 'https://script.google.com/macros/s/AKfycbyo3eUSPxpfAof8c_dOKlZST3I2LK8wI9CwVA59zsZIBppQdjca_ZMuwV8RC43zBKV68w/exec',
 
   // WhatsApp click-to-chat number: digits only, with country code and no "+".
-  whatsappNumber: '918123365095',
+  whatsappNumber: '917338888957',
 
   // Public payment details used to build the on-page UPI link and QR.
-  upiId: '6363728679-3@ybl',
-  payeeName: 'The Daily Grind',
+  upiId: 'anjumt01@ptyes',
+  payeeName: 'A&S Home Bake Desserts',
 
   currency: 'INR',
   locale: 'en-IN',
