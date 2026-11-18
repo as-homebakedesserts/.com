@@ -491,6 +491,10 @@ const HAPPY_PROBE = (url) => !/example\.invalid/.test(url);
     const pagesPaths = resolveBakeryMenuHref('/repo/');
     const pagesNestedPaths = resolveBakeryMenuHref('/repo/Baker/3d-bakery.html', 'pages');
 
+    check('the published menu bakery buttons route out of /menu/',
+      /href="Baker\/index\.html\?home=1"/.test(fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8')) &&
+      /href="Baker\/3d-bakery\.html"/.test(fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8')) &&
+      /sed -i 's\|href="Baker\/\|href="\.\.\/Baker\/\|g' site\/menu\/index\.html/.test(pagesWorkflow));
     check('the 3D bakery home button reaches Baker/index.html in both layouts',
       /id="bakery-home-link"[\s\S]*?href="index\.html\?home=1"/.test(bakery3dPage) &&
       previewPaths.homeHref === 'index.html?home=1' &&

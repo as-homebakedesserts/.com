@@ -50,6 +50,7 @@ jobs:
           sed -i 's/name="bakery-layout" content="source"/name="bakery-layout" content="pages"/' site/Baker/order.html site/Baker/3d-bakery.html
           cp Baker/3d-bakery.html site/index.html
           cp index.html style.css script.js site-config.js image-urls.js submit-order.js order.js menu-images.csv developer-avatar.png site/menu/
+          sed -i 's|href="Baker/|href="../Baker/|g' site/menu/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
